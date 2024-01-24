@@ -163,6 +163,15 @@ CLOUD_METADATA = Message(
     },
 )
 
+SNAP_INFO = Message(
+    "snap-info",
+    {
+        "brand": Unicode(),
+        "model": Unicode(),
+        "serial": Unicode(),
+    },
+)
+
 
 hal_data = Dict(
     Unicode(),
