@@ -16,6 +16,7 @@ from typing import Tuple
 from typing import Type
 from typing import Union
 
+from landscape.client import IS_SNAP
 from landscape.client.broker.registration import Identity
 from landscape.client.exchange import exchange_messages
 from landscape.client.manager.ubuntuproinfo import get_ubuntu_pro_info
@@ -48,6 +49,9 @@ class ClientRegistrationInfo:
         cls: Type["ClientRegistrationInfo"],
         identity: Identity,
     ) -> "ClientRegistrationInfo":
+        # the snap doesn't have access to paths required by get_vm_info
+        vm_info = get_vm_info() if not IS_SNAP else None
+
         return cls(
             identity.access_group,
             identity.account_name,
@@ -58,7 +62,7 @@ class ClientRegistrationInfo:
             registration_password=identity.registration_key,
             tags=identity.tags,
             ubuntu_pro_info=json.dumps(get_ubuntu_pro_info()),
-            vm_info=get_vm_info(),
+            vm_info=vm_info,
         )
 
 

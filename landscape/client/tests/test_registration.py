@@ -1,4 +1,5 @@
 """Unit tests for registration utility functions."""
+from dataclasses import dataclass
 from unittest import mock, TestCase
 
 from landscape.lib.fetch import HTTPCodeError
@@ -157,3 +158,28 @@ class RegisterTestCase(TestCase):
             register(client_info, "https://my-server.local/message-system")
 
         self.assertIn("Did not receive ID", str(exc_context.exception))
+
+    def test_no_get_vm_info_on_snap(self):
+        """Make sure the snap doesn't try to get the vm info."""
+        mock_get_vm_info = mock.Mock()
+
+        @dataclass
+        class TestIdentity:
+            access_group: str
+            account_name: str
+            computer_title: str
+            hostagent_uid = None
+            registration_key = None
+            tags = None
+
+        with mock.patch.multiple(
+            "landscape.client.registration",
+            IS_SNAP=True,
+            get_vm_info=mock_get_vm_info,
+        ):
+            client_info = ClientRegistrationInfo.from_identity(
+                TestIdentity("", "testy", "Test Computer")
+            )
+
+        mock_get_vm_info.assert_not_called()
+        self.assertIsNone(client_info.vm_info)
