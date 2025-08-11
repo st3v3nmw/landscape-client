@@ -1,0 +1,41 @@
+name: Update release branches
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  update-release-branches:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - branch: core-24
+            base: core24
+          - branch: core-22
+            base: core22
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-jinja2
+
+      - name: Update ${{ matrix.branch }}
+        run: |
+          git fetch origin ${{ matrix.branch }}
+          git checkout ${{ matrix.branch }}
+          git merge -X theirs main
+
+          make snap-yaml
+
+          git add --force snap/snapcraft.yaml
+          git commit -m "Update snapcraft.yaml" || true
+
+          git push origin ${{ matrix.branch }}
