@@ -1,8 +1,12 @@
 {# this is a template, generate the actual snapcraft.yaml with `make snap-yaml` #}
-{%- set python_version = "3.12" if base == "core24" else "3.10" -%}
+{%- set python_versions = {"core22": "3.10", "core24": "3.12", "core26": "3.14"} -%}
+{%- set python_version = python_versions[base] -%}
 
 name: landscape-client
 base: {{ base }}
+{%- if base == "core26" %}
+build-base: devel
+{%- endif %}
 version: '26.02'
 icon: snap/gui/landscape-logo-256.png
 website: https://ubuntu.com/landscape
@@ -14,9 +18,9 @@ description: |
   in a Landscape account. It provides the Landscape client and requires a
   Landscape account.
 
-grade: stable
+grade: {{ "devel" if base == "core26" else "stable" }}
 
-{%- if base == "core24" %}
+{%- if base != "core22" %}
 platforms:
   amd64:
   arm64:
@@ -143,11 +147,21 @@ parts:
       - python3-pycurl
       - python3-setuptools
       - python3-twisted
+      - python3-venv
       - ubuntu-advantage-tools
-    override-stage: |
+    # remove?
+    prime:
+      - -usr/lib/*/libc.so.6
+      - -usr/lib/*/libc_malloc_debug.so*
+      - -usr/lib/*/libm.so.6
+      - -usr/lib/*/libpthread.so.0
+      - -usr/lib/*/libdl.so.2
+      - -usr/lib/*/librt.so.1
+      - -usr/lib/*/ld-linux*.so*
+      - -usr/lib64/ld-linux*.so*
+    override-prime: |
       craftctl default
 
-      # Copy the scripts over
       mkdir -p ${SNAPCRAFT_PRIME}/usr/bin/
       cp -r ${SNAPCRAFT_PART_SRC}/scripts/. ${SNAPCRAFT_PRIME}/usr/bin/
   logrotate:
@@ -155,6 +169,16 @@ parts:
     source: .
     stage-packages:
       - logrotate
+    # remove?
+    prime:
+      - -usr/lib/*/libc.so.6
+      - -usr/lib/*/libc_malloc_debug.so*
+      - -usr/lib/*/libm.so.6
+      - -usr/lib/*/libpthread.so.0
+      - -usr/lib/*/libdl.so.2
+      - -usr/lib/*/librt.so.1
+      - -usr/lib/*/ld-linux*.so*
+      - -usr/lib64/ld-linux*.so*
     override-prime: |
       craftctl default
 
